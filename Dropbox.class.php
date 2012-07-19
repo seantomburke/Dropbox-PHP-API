@@ -4,36 +4,49 @@ session_start();
 /**
  * Dropbox API
  *
- * This is a simpler API for the Dropbox PHP API
+ * This is a simple PHP plaintext OAuth 1.0 API for Dropbox
  * 
- * @author Sean Thomas Burke	http://www.seantburke.com/
+ * @author Sean Thomas Burke <http://www.seantburke.com/>
  */
 
 class Dropbox
 {
-
+	//app variables, be sure to set these to your app settings before continuing.
+	//they can be found at https://www.dropbox.com/developers/apps
 	private static $APP_KEY 		= '71y17gy5y517jbi';
 	private static $APP_SECRET		= '56u3lyumzaeo2ed';
 	private static $CALLBACK_URL 	= 'http://www.seantburke.com/Dropbox/example.php';
 	
-	public $request_token_url;
-	public $oauth_token_secret;
-	public $oauth_request_token;
-	public $oauth_access_token;
-	public $oauth_signature;
-	public $uid;
-
+	//OAuth 1.0 variables
+	private $request_token_url;			//url to dropbox.com to get authorization
+	private $oauth_token_secret;		//reponse secret from initial request
+	private $oauth_request_token;		//initial response token
+	private $oauth_access_token;		//store this in your database
+	private $oauth_signature;			//store this in your database, they need to be used in every API call
+	private $uid;						//the uid returned as $_GET['uid']
+	
+	/**
+	 * Dropbox() 
+	 * creates the object and decides based on the $_SESSION whether to request() or processCallBack()
+	 *
+	 * @author 	Sean Thomas Burke <http://www.seantburke.com/>
+	 */
 	public function __construct()
 	{	
+		//store session variables from a request()
+		//this won't do anything until the processCallBack() method is called after the request()
 		$this->oauth_token_secret 	= $_SESSION['oauth_token_secret'];
 		$this->oauth_request_token 	= $_SESSION['oauth_request_token'];
 		$this->oauth_access_token 	= $_SESSION['oauth_access_token'];
 		$this->oauth_signature 		= $_SESSION['oauth_signature'];
 		$this->uid 					= $_SESSION['uid'];		
-			  
-		if(!isset($this->oauth_signature) || !isset($this->oauth_access_token))
+			 
+		//if the required variables are not set, then decide whether to make a request or process the $_SESSION
+		if(!$this->oauth_signature || !$this->oauth_access_token)
 		{
-			if(isset($_GET['uid']) && isset($_GET['oauth_token']) && isset($this->oauth_token_secret) && isset($this->oauth_request_token))
+			//if the following are not set, then a request needs to be made
+			//the fallback decision should be to request for a new token, and not to process the callback method
+			if($_GET['uid'] && $_GET['oauth_token'] && $this->oauth_token_secret && $this->oauth_request_token)
 			{
 				$this->processCallBack();
 			}
@@ -44,7 +57,16 @@ class Dropbox
 		}
 	}
 	
-	public function request()
+	/**
+	 * request() 
+	 *
+	 * sends a request to get OAuth request token and secret, builds the request_token_url
+	 * Step 1: call for request
+	 * @link https://www.dropbox.com/developers/reference/api#request-token
+	 * @link https://www.dropbox.com/developers/reference/api#authorize
+	 * @author 	Sean Thomas Burke <http://www.seantburke.com/>
+	 */
+	private function request()
 	{
 		// initiate a cURL; if you don't know what curl is, look it up at http://curl.haxx.se/
 		$ch = curl_init(); 
@@ -59,6 +81,8 @@ class Dropbox
 		//	parse the returned data which has the format:
 		// "oauth_token=<access-token>&oauth_token_secret=<access-token-secret>"
 		parse_str($request_token_response, $parsed_request_token);
+		
+		//check for any errors
 		$json_access = json_decode($request_token_response);
 		if($json_access->error)
 		{
@@ -68,7 +92,8 @@ class Dropbox
 		//set these variables in a $_SESSION variable
 		$_SESSION['oauth_token_secret'] 	= $parsed_request_token['oauth_token_secret'];
 		$_SESSION['oauth_request_token'] 	= $parsed_request_token['oauth_token'];
-		//also store them in the object
+		
+		//also store them in the object (unnecessary, but helps understand concept)
 		$this->oauth_token_secret 			= $parsed_request_token['oauth_token_secret'];
 		$this->oauth_request_token 			= $parsed_request_token['oauth_token'];
 		
@@ -77,9 +102,16 @@ class Dropbox
 		
 	}
 	
-	function processCallBack()
+	/**
+	 * processCallBack() 
+	 * 
+	 * call this function when the user returns from the request_token_url at dropbox.com 
+	 * Step 2: Process Request and get Signature and Access Token
+	 * @link	https://www.dropbox.com/developers/reference/api#request-token
+	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
+	 */
+	private function processCallBack()
 	{
-	
 		//Now we must process the request 
 		//same steps as before, but now the header is modified to include the response variables that were stored in the session
 		//notice the signature is a concatenation of the app_secret and the token_secret
@@ -88,29 +120,49 @@ class Dropbox
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);  
 		curl_setopt($ch, CURLOPT_URL, "https://api.dropbox.com/1/oauth/access_token");  
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);  
-		$access_token_response = curl_exec($ch);  
+		
 		//execute and parse
+		$access_token_response = curl_exec($ch);  
 		parse_str($access_token_response, $parsed_access_token);
+		
+		//check for errors
 		$json_access = json_decode($access_token_response);
 		if($json_access->error)
 		{
 			echo '<br><br>FATAL ERROR: '.$json_access->error.'<br><br>';
 		}
-		//store responses in $_SESSION
-		//these 2 variables are what you need to make API requests
 		
+		//it is unnecessary to keep the oauth_token_secret and oauth_request_token at this point
+		//clear the $_SESSION
 		session_unset();
+		
+		//store oauth_access_token and oauth_signature responses in $_SESSION
+		//again, oauth_signature is a concatenation of the APP_SECRET and the oauth_token_secret response
+		//these 2 variables are what you need to make API requests
 		$_SESSION['oauth_access_token'] 	= $parsed_access_token['oauth_token'];
 		$_SESSION['oauth_signature'] 		= self::$APP_SECRET.'&'.$parsed_access_token['oauth_token_secret'];	
+		
+		//dropbox also gives you uid, store it
 		$_SESSION['uid'] 					= $_GET['uid'];
-		//also store in the object
+		
+		//also store variables in the object for future reference
 		$this->oauth_access_token 			= $parsed_access_token['oauth_token'];
 		$this->oauth_signature 				= self::$APP_SECRET.'&'.$parsed_access_token['oauth_token_secret'];	
 		$this->uid		 					= $_GET['uid'];
-		
-		return true;
 	}
 	
+	/**
+	 * call($url)
+	 *
+	 * Using the REST api, make a call to a REST URL, and it will return the array
+	 * Step 3: Make an API call
+	 *
+	 * @link 	https://www.dropbox.com/developers/reference/api	
+	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
+	 *
+	 * @param 	$url	REST URL		
+	 * @return 	array	decoded from JSON response
+	 */
 	function call($url)
 	{
 		$ch = curl_init(); 
@@ -122,17 +174,43 @@ class Dropbox
 		return json_decode($api_response);
 	}
 	
+	
+	/**
+	 * getAccessURL() 
+	 * returns the URL used for requests
+	 * @link	https://www.dropbox.com/developers/reference/api#authorize
+	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
+	 *
+	 * @return 	string of URL for requesting OAuth Token
+	 */
 	function getAccessURL()
 	{
 		//get the Request URL
 		return $this->request_token_url;
 	}
 	
+	/**
+	 * hasAccess() 
+	 * check to see if the user has access already
+	 *
+	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
+	 * @return 	boolean of 3 required variables (uid is not required, but it helps)
+	 */
 	function hasAccess()
 	{
 		return ($this->oauth_access_token && $this->oauth_signature && $this->uid);
 	}
 	
+	
+	/**
+	 * filesGet() 
+	 * get a file from the dropbox
+	 * @link 	https://www.dropbox.com/developers/reference/api#files-GET
+	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
+	 *
+	 * @param	$root {sandbox, dropbox} $path {url path to document}
+	 * @return 	boolean of 3 required variables (uid is not required, but it helps)
+	 */
 	function filesGet($root,$path)
 	{
 		return $this->call('https://api-content.dropbox.com/1/files/'.$root.'/'.$path);
