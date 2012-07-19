@@ -12,8 +12,8 @@ session_start();
 class Dropbox
 {
 
-	private static $APP_KEY 		= '2wzkqtz841mexy6';
-	private static $APP_SECRET		= 'uuhyxn0bj4ok44q';
+	private static $APP_KEY 		= '71y17gy5y517jbi';
+	private static $APP_SECRET		= '56u3lyumzaeo2ed';
 	private static $CALLBACK_URL 	= 'http://www.seantburke.com/Dropbox/example.php';
 	
 	public $request_token_url;
@@ -47,7 +47,7 @@ class Dropbox
 		if(!isset($this->oauth_signature) || !isset($this->oauth_access_token))
 		{
 			echo 'if('.!isset($this->oauth_token_secret).' OR '.!isset($this->oauth_request_token).')';
-			if(isset($_GET['kid']) && isset($_GET['oauth_token']))
+			if(isset($_GET['uid']) && isset($_GET['oauth_token']) && isset($this->oauth_token_secret) && isset($this->oauth_request_token))
 			{
 				echo'<br>';echo'<br>';echo 'Step 2: Processing CallBack()';
 				echo'<br>';
@@ -73,16 +73,18 @@ class Dropbox
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);  
 		curl_setopt($ch, CURLOPT_URL, "https://api.dropbox.com/1/oauth/request_token");  
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);  
-		$request_token_response = curl_exec($ch);  
+		$request_token_response = curl_exec($ch);
+		echo $request_token_response;  
 		
 		//	parse the returned data which has the format:
 		// "oauth_token=<access-token>&oauth_token_secret=<access-token-secret>"
 		parse_str($request_token_response, $parsed_request_token);
 		echo '<br>Response to Request<br>';
 		var_dump($parsed_request_token);
-		if($parsed_request_token['error'])
+		$json_access = json_decode($request_token_response);
+		if($json_access->error)
 		{
-			echo '<br><br>FATAL ERROR: REQUEST TOKEN RETURNED AN ERROR<br><br>';
+			echo '<br><br>FATAL ERROR: '.$json_access->error.'<br><br>';
 		}
 		
 		//set these variables in a $_SESSION variable
@@ -112,13 +114,14 @@ class Dropbox
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);  
 		$access_token_response = curl_exec($ch);  
 		//execute and parse
+		echo $access_token_response;
 		parse_str($access_token_response, $parsed_access_token);
 		echo'<br>';echo '<br>Response to CallBack<br>';
 		var_dump($parsed_access_token);
-		
-		if($parsed_access_token['error'])
+		$json_access = json_decode($access_token_response);
+		if($json_access->error)
 		{
-			echo '<br><br>FATAL ERROR: ACCESS TOKEN RETURNED AN ERROR<br><br>';
+			echo '<br><br>FATAL ERROR: '.$json_access->error.'<br><br>';
 		}
 		//store responses in $_SESSION
 		//these 2 variables are what you need to make API requests
