@@ -13,17 +13,17 @@ class Dropbox
 {
 	//app variables, be sure to set these to your app settings before continuing.
 	//they can be found at https://www.dropbox.com/developers/apps
-	private static $APP_KEY 		= '71y17gy5y517jbi';
-	private static $APP_SECRET		= '56u3lyumzaeo2ed';
-	private static $CALLBACK_URL 	= 'http://www.seantburke.com/Dropbox/example.php';
+	private static $APP_KEY 		= 'XXXXXXXXXXXXXX';
+	private static $APP_SECRET		= 'XXXXXXXXXXXXXXX';
+	private static $CALLBACK_URL 		= 'http://www.seantburke.com/Dropbox/example.php';
 	
 	//OAuth 1.0 variables
-	private $request_token_url;			//url to dropbox.com to get authorization
+	private $request_token_url;		//url to dropbox.com to get authorization
 	private $oauth_token_secret;		//reponse secret from initial request
 	private $oauth_request_token;		//initial response token
 	private $oauth_access_token;		//store this in your database
-	private $oauth_signature;			//store this in your database, they need to be used in every API call
-	private $uid;						//the uid returned as $_GET['uid']
+	private $oauth_signature;		//store this in your database, they need to be used in every API call
+	private $uid;				//the uid returned as $_GET['uid']
 	
 	/**
 	 * Dropbox() 
@@ -39,7 +39,7 @@ class Dropbox
 		$this->oauth_request_token 	= $_SESSION['oauth_request_token'];
 		$this->oauth_access_token 	= $_SESSION['oauth_access_token'];
 		$this->oauth_signature 		= $_SESSION['oauth_signature'];
-		$this->uid 					= $_SESSION['uid'];		
+		$this->uid 			= $_SESSION['uid'];		
 			 
 		//if the required variables are not set, then decide whether to make a request or process the $_SESSION
 		if(!$this->oauth_signature || !$this->oauth_access_token)
@@ -94,8 +94,8 @@ class Dropbox
 		$_SESSION['oauth_request_token'] 	= $parsed_request_token['oauth_token'];
 		
 		//also store them in the object (unnecessary, but helps understand concept)
-		$this->oauth_token_secret 			= $parsed_request_token['oauth_token_secret'];
-		$this->oauth_request_token 			= $parsed_request_token['oauth_token'];
+		$this->oauth_token_secret 		= $parsed_request_token['oauth_token_secret'];
+		$this->oauth_request_token 		= $parsed_request_token['oauth_token'];
 		
 		//get the request URL; this is where you send the user to authorize your request. Be sure to set the CALLBACK_URL before doing this.
 		$this->request_token_url = 'https://www.dropbox.com/1/oauth/authorize?oauth_token='.$parsed_request_token['oauth_token'].'&oauth_callback='.self::$CALLBACK_URL;	
@@ -143,12 +143,12 @@ class Dropbox
 		$_SESSION['oauth_signature'] 		= self::$APP_SECRET.'&'.$parsed_access_token['oauth_token_secret'];	
 		
 		//dropbox also gives you uid, store it
-		$_SESSION['uid'] 					= $_GET['uid'];
+		$_SESSION['uid'] 			= $_GET['uid'];
 		
 		//also store variables in the object for future reference
-		$this->oauth_access_token 			= $parsed_access_token['oauth_token'];
-		$this->oauth_signature 				= self::$APP_SECRET.'&'.$parsed_access_token['oauth_token_secret'];	
-		$this->uid		 					= $_GET['uid'];
+		$this->oauth_access_token 		= $parsed_access_token['oauth_token'];
+		$this->oauth_signature 			= self::$APP_SECRET.'&'.$parsed_access_token['oauth_token_secret'];	
+		$this->uid		 		= $_GET['uid'];
 	}
 	
 	/**
