@@ -4,7 +4,7 @@ require_once 'Dropbox.class.php';
 
 $dropbox = new Dropbox();
 
-$userArray = $dropbox->call('https://api.dropbox.com/1/account/info');
+$userArray = $dropbox->get('https://api.dropbox.com/1/account/info');
 
 ?>
 
@@ -24,7 +24,14 @@ $userArray = $dropbox->call('https://api.dropbox.com/1/account/info');
 			<ul>	
 				<li>'.$userArray->display_name.'</li>
 				<li>'.$userArray->email.'</li>
-			</ul>';
+			</ul>
+		<a href="test.php">Put Test File</a>
+		<form action="get.php" method="GET">
+		<label>File name to get:</label>
+		<input type="text" name="path"/>
+		<input type="submit" />
+		';
+		
 	}
 	else
 	{
