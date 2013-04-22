@@ -152,7 +152,7 @@ class Dropbox
 	}
 	
 	/**
-	 * call($url)
+	 * get($url)
 	 *
 	 * Using the REST api, make a call to a REST URL, and it will return the array
 	 * Step 3: Make an API call
@@ -228,13 +228,13 @@ class Dropbox
 	
 	
 	/**
-	 * filesGet() 
+	 * getFile()
 	 * get a file from the dropbox
 	 * @link 	https://www.dropbox.com/developers/reference/api#files-GET
 	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
 	 *
 	 * @param	$root {sandbox, dropbox} $path {url path to document}
-	 * @return 	boolean of 3 required variables (uid is not required, but it helps)
+	 * @return 	files contents
 	 */
 	function getFile($root, $path)
 	{
@@ -242,7 +242,7 @@ class Dropbox
 	}
 	
 	/**
-	 * filesGet() 
+	 * putFile 
 	 * get a file from the dropbox
 	 * @link 	https://www.dropbox.com/developers/reference/api#files-GET
 	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
@@ -250,15 +250,16 @@ class Dropbox
 	 * @param	$root {sandbox, dropbox} $path {url path to document}
 	 * @return 	boolean of 3 required variables (uid is not required, but it helps)
 	 */
-	function filesPut($root,$path)
+	function putFile($root,$path)
 	{
+		//TODO still needs implementation
 		return $this->put('https://api-content.dropbox.com/1/files_put/'.$root.'/'.$path.'?param=val');
 	}
 
 
 	/**
-	 * filesGet() 
-	 * get a file from the dropbox
+	 * test() 
+	 * test the dropbox upload function
 	 * @link 	https://www.dropbox.com/developers/reference/api#files-GET
 	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
 	 *
@@ -274,7 +275,7 @@ class Dropbox
 		if (!$fp) {
 		    die('could not open temp memory data');
 		}
-		fwrite($fp, 'Hello Sean!');
+		fwrite($fp, $body);
 		fseek($fp, 0); 
 		
 		$ch = curl_init(); 
@@ -283,7 +284,7 @@ class Dropbox
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);  
 		//echo '<a href="'.$url.'">'.$url.'</a>';
 		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
 		curl_setopt($ch, CURLOPT_INFILE, $fp); // file pointer
 		curl_setopt($ch, CURLOPT_INFILESIZE, strlen($body));  
 		
