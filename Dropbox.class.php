@@ -13,9 +13,9 @@ class Dropbox
 {
 	//app variables, be sure to set these to your app settings before continuing.
 	//they can be found at https://www.dropbox.com/developers/apps
-	private static $APP_KEY 		= 'XXXXXXXXXXXXXX';
-	private static $APP_SECRET		= 'XXXXXXXXXXXXXXX';
-	private static $CALLBACK_URL 		= 'http://www.seantburke.com/Dropbox/example.php';
+	private static $APP_KEY 		= '071fnel6tug8c8u';
+	private static $APP_SECRET		= 'ksx8k6ih23b5ub2';
+	private static $CALLBACK_URL 		= 'http://www.seantburke.com/github/Dropbox-PHP-API/example.php';
 	
 	//OAuth 1.0 variables
 	private $request_token_url;		//url to dropbox.com to get authorization
@@ -163,13 +163,38 @@ class Dropbox
 	 * @param 	$url	REST URL		
 	 * @return 	array	decoded from JSON response
 	 */
-	function call($url)
+	function get($url)
 	{
 		$ch = curl_init(); 
 		$headers = array('Authorization: OAuth oauth_version="1.0", oauth_signature_method="PLAINTEXT", oauth_consumer_key="'.self::$APP_KEY.'", oauth_token="'.$this->oauth_access_token.'", oauth_signature="'.$this->oauth_signature.'"');  
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);  
 		curl_setopt($ch, CURLOPT_URL, $url);  
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);  
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		$api_response = curl_exec($ch);
+		return $api_response;
+	}
+	
+	/**
+	 * call($url)
+	 *
+	 * Using the REST api, make a call to a REST URL, and it will return the array
+	 * Step 3: Make an API call
+	 *
+	 * @link 	https://www.dropbox.com/developers/reference/api	
+	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
+	 *
+	 * @param 	$url	REST URL		
+	 * @return 	array	decoded from JSON response
+	 */
+	function put($url)
+	{
+		$ch = curl_init(); 
+		$headers = array('Authorization: OAuth oauth_version="1.0", oauth_signature_method="PLAINTEXT", oauth_consumer_key="'.self::$APP_KEY.'", oauth_token="'.$this->oauth_access_token.'", oauth_signature="'.$this->oauth_signature.'"');  
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);  
+		curl_setopt($ch, CURLOPT_URL, $url);  
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 		$api_response = curl_exec($ch);
 		return json_decode($api_response);
 	}
@@ -211,10 +236,58 @@ class Dropbox
 	 * @param	$root {sandbox, dropbox} $path {url path to document}
 	 * @return 	boolean of 3 required variables (uid is not required, but it helps)
 	 */
-	function filesGet($root,$path)
+	function getFile($root, $path)
 	{
-		return $this->call('https://api-content.dropbox.com/1/files/'.$root.'/'.$path);
+		return $this->get('https://api-content.dropbox.com/1/files/'.$root.'/'.$path);
+	}
+	
+	/**
+	 * filesGet() 
+	 * get a file from the dropbox
+	 * @link 	https://www.dropbox.com/developers/reference/api#files-GET
+	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
+	 *
+	 * @param	$root {sandbox, dropbox} $path {url path to document}
+	 * @return 	boolean of 3 required variables (uid is not required, but it helps)
+	 */
+	function filesPut($root,$path)
+	{
+		return $this->put('https://api-content.dropbox.com/1/files_put/'.$root.'/'.$path.'?param=val');
 	}
 
+
+	/**
+	 * filesGet() 
+	 * get a file from the dropbox
+	 * @link 	https://www.dropbox.com/developers/reference/api#files-GET
+	 * @author 	Sean Thomas Burke <http://www.seantburke.com>
+	 *
+	 * @param	$root either "sandbox" or "dropbox" $path {url path to document}
+	 * @return 	boolean of 3 required variables (uid is not required, but it helps)
+	 */
+	function test($root)
+	{
+		$url = 'https://api-content.dropbox.com/1/files_put/'.$root.'/test2.txt?overwrite=true&locale=en';
+		$body = file_get_contents('test.txt');
+		//echo "file_contents: ".$body;
+		$fp = fopen('php://temp/maxmemory:256000', 'w');
+		if (!$fp) {
+		    die('could not open temp memory data');
+		}
+		fwrite($fp, 'Hello Sean!');
+		fseek($fp, 0); 
+		
+		$ch = curl_init(); 
+		$headers = array('Authorization: OAuth oauth_version="1.0", oauth_signature_method="PLAINTEXT", oauth_consumer_key="'.self::$APP_KEY.'", oauth_token="'.$this->oauth_access_token.'", oauth_signature="'.$this->oauth_signature.'"');  
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);  
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);  
+		//echo '<a href="'.$url.'">'.$url.'</a>';
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+		curl_setopt($ch, CURLOPT_INFILE, $fp); // file pointer
+		curl_setopt($ch, CURLOPT_INFILESIZE, strlen($body));  
+		
+		return $api_response = curl_exec($ch);
+	}
 
 }
