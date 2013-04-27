@@ -13,8 +13,8 @@ class Dropbox
 {
 	//app variables, be sure to set these to your app settings before continuing.
 	//they can be found at https://www.dropbox.com/developers/apps
-	private static $APP_KEY 		= '071fnel6tug8c8u';
-	private static $APP_SECRET		= 'ksx8k6ih23b5ub2';
+	private static $APP_KEY 		= 'XXXXXXXXXXXXXXX';
+	private static $APP_SECRET		= 'XXXXXXXXXXXXXXX';
 	private static $CALLBACK_URL 		= 'http://www.seantburke.com/github/Dropbox-PHP-API/example.php';
 	
 	//OAuth 1.0 variables
