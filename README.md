@@ -1,5 +1,6 @@
 Dropbox-PHP-API
 ===============
+[![endorse](https://api.coderwall.com/hawaiianchimp/endorsecount.png)](https://coderwall.com/hawaiianchimp)
 
 API for Dropbox OAuth 1.0 using simple plaintext OAuth
 
